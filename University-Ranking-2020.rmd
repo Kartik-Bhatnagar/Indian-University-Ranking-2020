@@ -1,0 +1,833 @@
+---
+title: "Final R Project"
+author: "Kartik  Bhatnagar, 20231"
+date: "23/04/2021"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+setwd("~/msc data science/2nd Sem/mdsc206/University_Ranking_Proj")
+```
+
+```{r}
+library(funModeling)
+library(GGally)
+library(lattice)
+library(tidyverse)
+library(leaps)
+library(ggplot2)
+```
+
+ #E.D.A 
+ 
+```{r}
+univdata <- read.csv("all.csv")
+univdata_num <- read.csv("all.csv")
+univdata_1 <- read.csv("all.csv")
+head(univdata)
+attach(univdata)
+summary(univdata)
+dim(univdata)
+univdata_num %>% select_if(is.numeric)
+```
+```{r}
+univdata_num<- univdata_num %>% select_if(is.numeric)
+```
+#Category wise data
+```{r}
+arch_data <- univdata_1 %>% filter(univdata_1$category == "architecture")
+dent_data <- univdata_1 %>% filter(univdata_1$category == "dental")
+engi_data <- univdata_1 %>% filter(univdata_1$category == "engineering")
+law_data <- univdata_1 %>% filter(univdata_1$category == "law")
+mana_data <- univdata_1 %>% filter(univdata_1$category == "management")
+medi_data <- univdata_1 %>% filter(univdata_1$category == "medical")
+phar_data <-univdata_1 %>% filter(univdata_1$category == "pharmacy")
+
+```
+
+```{r}
+arch_data_num<- arch_data %>% select_if(is.numeric)
+dent_data_num<- dent_data %>% select_if(is.numeric)
+engi_data_num<- engi_data %>% select_if(is.numeric)
+law_data_num<- law_data %>% select_if(is.numeric)
+mana_data_num<- mana_data %>% select_if(is.numeric)
+medi_data_num<- medi_data %>% select_if(is.numeric)
+phar_data_num<- phar_data %>% select_if(is.numeric)
+
+```
+
+
+```{r}
+univdata_num$oi <- as.numeric(univdata_num$oi)
+univdata_num$tlr <- as.numeric(univdata_num$tlr)
+univdata_num$rpc <- as.numeric(univdata_num$rpc)
+univdata_num$go <- as.numeric(univdata_num$go)
+univdata_num$perception <- as.numeric(univdata_num$perception)
+univdata_num$rank <- as.numeric(univdata_num$rank)
+```
+
+```{r}
+
+#univdata_num
+```
+
+
+## Correlation Of Full Data
+```{r}
+cor(univdata_num, use = "complete.obs")
+library(corrplot)
+corrplot(cor(univdata_num),
+  method = "number",
+  type = "upper" # show only upper side
+)
+```
+```{r}
+
+ggpairs(univdata_num)
+```
+
+## Correlation of Universities in "Architecture" Category
+```{r}
+cor(arch_data_num, use = "complete.obs")
+library(corrplot)
+corrplot(cor(arch_data_num),
+  method = "number",
+  type = "upper" # show only upper side
+  
+)
+ggpairs(arch_data_num)
+```
+## Correlation of Universities in "Dental" Category
+```{r}
+library(corrplot)
+corrplot(cor(dent_data_num),
+  method = "number",
+  type = "upper" # show only upper side
+)
+ggpairs(dent_data_num)
+```
+## Correlation of Universities in **"Engineering"** Category
+```{r}
+library(corrplot)
+corrplot(cor(engi_data_num),
+  method = "number",
+  type = "upper" # show only upper side
+)
+ggpairs(engi_data_num)
+```
+## Correlation of Universities in **"Law"** Category
+```{r}
+library(corrplot)
+corrplot(cor(law_data_num),
+  method = "number",
+  type = "upper" # show only upper side
+)
+ggpairs(law_data_num)
+```
+## Correlation of Universities in **"Management"** Category
+```{r}
+library(corrplot)
+corrplot(cor(mana_data_num),
+  method = "number",
+  type = "upper" # show only upper side
+)
+ggpairs(mana_data_num)
+```
+## Correlation of Universities in **"Medical"** Category
+```{r}
+library(corrplot)
+corrplot(cor(mana_data_num),
+  method = "number",
+  type = "upper" # show only upper side
+)
+ggpairs(mana_data_num)
+```
+## Correlation of Universities in "pharmacy" Category
+```{r}
+library(corrplot)
+corrplot(cor(phar_data_num),
+  method = "number",
+  type = "upper" # show only upper side
+)
+ggpairs(phar_data_num)
+```
+
+ 
+
+###  Number Of Universities Category wise in Top Rankings
+```{r}
+ggplot(data = univdata) +
+  geom_bar(mapping = aes(x = category,colour=category))
+```
+
+
+```{r}
+hist(tlr,xlab = "rank",col = "yellow",border = "blue")
+boxplot(tlr,col = "Red", horizontal = TRUE, main = "Boxplot of tlr")
+
+
+``` 
+
+## View Categorical Data
+```{r}
+
+freq(univdata)
+```
+
+```{r}
+
+plot_num(univdata,bins=30)
+plot_num(arch_data,bins=30)
+plot_num(dent_data,bins=30)
+plot_num(engi_data,bins=30)
+plot_num(law_data,bins=30)
+plot_num(mana_data,bins=30)
+plot_num(medi_data,bins=10)
+plot_num(phar_data,bins=20)
+```
+
+## Cross Tables and Pivot Table
+```{r}
+# Cross table
+table(category)
+table(univdata$category,univdata$state)
+
+```
+
+```{r}
+library(caTools)
+set.seed(456)
+randomVar <- sample.split(univdata,SplitRatio=0.8)
+utrain <- subset(univdata,randomVar==TRUE)
+utest <- subset(univdata,randomVar==FALSE)
+
+nrow(utrain)
+nrow(utest)
+head(utrain)
+head(utest)
+#utrain
+#utest
+```
+
+## Inferential Statistics
+
+```{r}
+
+reguniv.fwd = regsubsets(rank~.,data = univdata_num,nvmax=8,method="forward")
+```
+```{r}
+summary(reguniv.fwd)
+```
+
+## Check the normality using shapiro test
+In this test
+\[H_0: \text{The data is normal }\]
+\[H_1: \text{The data is NOT normal }\]
+If $p$ - value is < 0.001 then Reject $H_0$ otherwise accept $H_0.$
+
+```{r}
+round(shapiro.test(univdata[,"tlr"])$p.value,7)
+round(shapiro.test(univdata[,"go"])$p.value,7)
+round(shapiro.test(univdata[,"rpc"])$p.value,7)
+round(shapiro.test(univdata[,"perception"])$p.value,7)
+round(shapiro.test(univdata[,"oi"])$p.value,7)
+
+```
+as the pvalue in  the case "go",rpc","perception" is <0.001 therefore we infer that the data is not normal
+"tlr"and "oi" data are normal.
+
+##Forward method of choosing models
+```{r}
+Model1 <- lm(rank ~ tlr, data = utrain)
+summary(Model1)
+
+Model2 <- lm(rank ~ tlr+go, data = utrain)
+summary(Model2)
+
+Model3 <- lm(rank ~ tlr+go +rpc, data = utrain)
+summary(Model3)
+
+Model4 <- lm(rank ~ tlr +go +rpc + perception, data = utrain)
+summary(Model4)
+
+Model5 <- lm(rank ~ tlr +go +rpc + perception+oi, data = utrain)
+summary(Model5)
+
+```
+
+ ## Linear Model for Rank Estimation
+Model is
+$\text{rank}=\beta_0+\beta_1*\text{tlr}+\beta_2*\text{go}+\beta_3*\text{rpc}+\beta_4*\text{perception}+\beta_5*\text{oi}+\epsilon,$ where $\epsilon\sim N(0,\sigma^2)$
+
+
+and testing Hypothesis is given as
+
+\[H_0: \beta_0=\beta_1=\beta_2=0\\beta_3=\\beta_4=\\beta_5=\]
+\[H_1: \beta_i\neq0\ \text{for some}\ i=0,1,2..5 \]
+
+###The Best Model From the above models is Model5 
+```{r}
+Model5 <- lm(rank ~ tlr +go +rpc + perception+oi, data = utrain)
+summary(Model5)
+```
+ from summary we can say that null hypothesis is rejected as p value is almost equal to 0
+From the summary, we can conclude that the linear model is
+\[rank=270.21403 -1.2831*tlr - 0.9730*go -0.6397*rpc -0.3569*perception -0.6537*oi  +\epsilon\]
+## This means that whenever the all regressor variable are increasing the rank is decreasing
+##The Estimated error is 30.16 and Adjusted - R Squared value is 0.6942
+## cyl has a significant value but carb is not significant
+
+## MVN normality test
+```{r}
+library(MVN)
+```
+```{r}
+par(mfrow=c(1,2))
+univdata[,c(3,10)] %>% mvn(multivariatePlot = "contour")
+univdata[,c(4,10)] %>% mvn(multivariatePlot = "contour")
+univdata[,c(5,10)] %>% mvn(multivariatePlot = "contour")
+univdata[,c(6,10)] %>% mvn(multivariatePlot = "contour")
+univdata[,c(7,10)] %>% mvn(multivariatePlot = "contour")
+```
+# Two ellipse are being seen with tlr and rank , partially normal data
+.
+.
+.
+## Plotting model with diffrent parameters
+```{r}
+par(mfrow=c(2,2))
+plot(Model5)
+```
+
+
+```{r}
+result1 <-mvn(univdata_num,  mvnTest = "mardia")
+result1
+```
+
+```{r}
+library(broom)
+glance(Model5) %>% dplyr::select(adj.r.squared,sigma,AIC,BIC)
+```
+AIC value of Model 1 = 3408
+AIC value of Model 5 = 3231 (the lower the value of AIC the better is the model)
+
+Normalizing the Data
+```{r}
+# xu = utrain[ , c("tlr","go","rpc","perception","oi")]
+# yu = utrain$rank
+# xu
+library(MASS)
+bc_u <- boxcox(rank ~ tlr +go +rpc + perception+oi, data = utrain)
+lambda_u <- bc_u$x[which.max(bc_u$y)]
+lambda_u
+
+```
+
+```{r}
+bc_u
+utrain
+```
+
+
+```{r}
+utrain$y <- ((utrain$rank)^lambda_u-1/lambda_u)
+shapiro.test(utrain$rank)$p.value
+New_model_u <- lm(y ~ tlr +go +rpc + perception+oi, data = utrain)
+summary(New_model_u)
+```
+```{r}
+
+glance(New_model_u) %>% dplyr::select(adj.r.squared,sigma,AIC,BIC)
+```
+Prediction on Newmodel1
+```{r}
+Model6 <- lm(rank ~ tlr *go *perception * oi*rpc , data = utrain)
+summary(Model6)
+glance(Model6) %>% dplyr::select(adj.r.squared,sigma,AIC,BIC)
+```
+```{r}
+par(mfrow=c(2,2))
+plot(Model6)
+```
+
+
+```{r}
+
+Pre <- predict(Model6,utrain,interval = 'confidence')
+#Pre <- (lambda_u*Pre+1)**(1/lambda_u)
+Pre
+actuals <-data.frame(cbind(actuals=utrain$rank,predicteds=Pre)) 
+head(actuals)
+```
+
+
+```{r}
+#new data set containing Fit , lwr and upr values
+tble_pred <- data.frame(actaul_rank = actuals[,1] ,fit =round(actuals[,2],0), lwr = round(actuals[,3],0) , upr = round(actuals[,4],0) )
+(tble_pred)
+```
+
+```{r}
+# tble_pred$result2 <- ifelse(sapply(tble_pred$actaul_rank, function(p) 
+#                  any(tble_pred$fit > p)),"YES", NA)
+# tble_pred
+```
+
+
+______________________________________________________ANOVA___________________________________________
+
+Quantative variable :tlr  (Teaching Learning & Resource Marks)
+Categorical variable : category (Various categories of Universities) 
+
+
+Here, the factor is the `target` variable which contains 7  groups i.e (Architecture Dental Engineering Law Management Medical Pharmacy)
+
+```{r}
+anv_plot <- ggplot(univdata)+
+  aes(category,tlr,color=category)+ geom_jitter()+
+  theme(legend.position="none")+
+  labs(title=" Teaching Learning & Resource Marks VS Various categories of Universities")
+
+anv_plot
+
+```
+This Plot basically  shows all the points depecting TLR scores of various Universities Category wise
+The DataPoints for The Engineering Universities are more , and it is Evident in this Diagram and the least is for Architecture Universities 
+
+```{r}
+
+p4 <- ggplot() + geom_bar(aes(y = tlr, x = category, fill = category), data =  univdata,
+                           stat="identity") + geom_text(data=univdata, aes(x = category, y = tlr,
+                                             label = paste(tlr,"%")), size=4)
+p4
+```
+Total Tlr Scores University Category Wise
+
+```{r}
+ggplot(univdata)+
+  aes(tlr,color=category,)+geom_histogram()+
+  labs(title="TLR Scores Category Wise")
+```
+This Plot shows the Spread of TLR scores According to various Universities Categories
+
+
+```{r}
+anv_plot + geom_boxplot()
+```
+Architectural and Pharmacy Colleges seems to have same Average TLR Scores
+Dental Colleges are having highest TLR Scores
+Engineering Universities are having lowest TLR Scores among all
+
+##Normality:
+```{r}
+res_aov_u <- aov(tlr ~ category,data=univdata
+               )
+
+```
+
+
+The null and alternative hypothesis of an ANOVA are:
+- $H_0:$ The seven categories of Universities are equal in terms of TLR Scores
+- $H_1:$ Mean is different.
+We can check normality visually:
+```{r}
+par(mfrow=c(1,2)) # combine plots
+
+# histogram
+hist(res_aov_u$residuals)
+
+qqnorm(res_aov_u$residuals,xlab = "norm quantiles")
+```
+
+```{r}
+shapiro.test(res_aov_u$residuals)
+```
+
+by observing plots or `shapiro.test()` results, we can conclude that the residuals are not normal.
+
+As the P-value is less than 0.001 there we reject The null Hypothesis and accept the Alternate Hypothesis, this means that the MEANS  of TLR in all 7 categories of Universities are Different
+
+Visually, we have
+```{r}
+# Boxplot
+boxplot(tlr ~ category,data=univdata)
+```
+
+```{r}
+# Dotplot from lattice library
+dotplot(tlr ~ category,data=univdata)
+```
+
+Both the boxplot and the dotplot show a difference in  variance for the tlr Score in different categories of  Universities .
+
+Testing Hypothesis for Levense Test:
+
+$H_0:$ Variances are equal
+$H_1:$ at least one varaince is different
+
+```{r}
+# Levene's test from car library
+library(car)
+leveneTest(tlr ~ category,data=univdata)
+```
+
+The p-value being smaller than the significance level of 0.05, we  reject the null hypothesis, so we accept the hypothesis that variances are different among different University Categories (p-value = 1.496e-05).
+
+```{r}
+group_by(univdata, category) %>% 
+     summarise(
+            mean = mean(tlr,na.rm=TRUE),
+            sd = sd(tlr,na.rm=TRUE)
+            )
+```
+
+```{r}
+
+summary (res_aov_u)
+```
+Inference:
+
+- Given that the p-value is smaller than 0.05, we reject the null hypothesis, so we reject the hypothesis that all means are equal.
+- We can conclude that **at least one University Category is different than the others in terms of TLR scores** (p-value < 2.2e-16).
+
+______________________________Manova_________________________________
+
+##One Way Manova
+```{r}
+# MANOVA test 
+M_model1 = manova(cbind(tlr,rpc,go,oi,perception) ~ category,data = univdata)
+summary(M_model1)
+# Default "pillai", Other tests are "Wilks","Hotelling-Lawley", and "Roy"
+```
+ reject null hypothsis and accept alternate hypothsis as P-value(< 2.2e-16) is very small
+
+## Normality Test
+```{r}
+shapiro.test(M_model1$residuals)
+
+```
+residuals is not in normal distribution as p value is not > 0.05
+
+```{r}
+library(ggpubr)
+ggboxplot(
+  univdata, x = "category", y = c("tlr","rpc","go","oi","perception"), 
+  merge = TRUE, palette = "jco"
+  )
+```
+
+
+## COVARIANCE TEST
+```{r}
+# install.packages("heplots")
+library(heplots)
+?boxM
+res_ma <- boxM(univdata[,c(3,4,5,6,7)], univdata$category)
+res_ma
+plot(res_ma, gplabel="category")
+```
+
+Covariance is not normal as P-value is very less (<2.2e-16)
+
+Inference-->
+A one-way multivariate  analysis of variance was being performed to determine the effect of different University Category on  the five score determining variables(tlr,rpc,go,oi,perception).  There are seven different categories: Architecture,Dental,Engineering,Law,Management,Medical and Pharmacy.
+
+
+From the output above, it can be seen that the five variables(tlr,rpc,go,oi,perception) are highly significantly different among University Category.
+
+
+
+______________________LDA_________________________________________
+
+```{r}
+library(caret)
+set.seed(430)
+# Data partition
+index <- createDataPartition(univdata$category, p = .80, list = FALSE)
+trainu <- univdata[index,]
+testu <- univdata[-index,]
+```
+
+```{r}
+trainu = subset(trainu, select = -c(institute_id,name,state,city) )
+testu = subset(testu, select = -c(institute_id,name,state,city))
+
+```
+```{r}
+#testu
+```
+
+
+```{r}
+
+trainu$category <- as.factor(trainu$category)
+testu$category <- as.factor(testu$category)
+```
+```{r}
+testu$tlr <- as.numeric(testu$tlr)
+trainu$tlr <- as.numeric(trainu$tlr)
+testu$rpc <- as.numeric(testu$rpc)
+trainu$rpc <- as.numeric(trainu$rpc)
+testu$go <- as.numeric(testu$go)
+trainu$go <- as.numeric(trainu$go)
+testu$oi <- as.numeric(testu$oi)
+trainu$oi <- as.numeric(trainu$oi)
+testu$perception <- as.numeric(testu$perception)
+trainu$perception <- as.numeric(trainu$perception)
+```
+
+
+```{r}
+# Featureplot for density 
+featurePlot(x=trainu[,1:5], y = trainu$category,
+            plot="density",
+            scales= list(x = list(relation = "free"), 
+                        y = list(relation = "free")),
+            adjust = 1.5, 
+            pch = "|",
+            auto.key = list(columns = 3)
+            )
+            
+```
+
+
+```{r}
+# Featureplot for boxplots
+featurePlot(x=trainu[,1:5], 
+            y = trainu$category,
+           plot = "box",
+          scales = list(y = list(relation = "free"),
+                        x = list(rot = 90)),
+           layout = c(5,1)
+            )
+
+```
+
+```{r}
+# install.packages("ellipse")
+library(ellipse)
+featurePlot(x = trainu[, 1:5], 
+            y = trainu$category,
+            plot = "ellipse",
+            auto.key = list(columns = 3)
+            )
+```
+
+working on L.D.A
+
+
+```{r}
+library(MASS)
+umodel_lda = lda(category ~ ., data = trainu)
+#umodel_lda
+```
+
+```{r}
+plot(umodel_lda)
+```
+
+```{r}
+pred = predict(umodel_lda,trainu)
+head(pred$class)
+
+```
+
+### Computing P.C.A
+```{r}
+trainu
+```
+
+
+```{r}
+# Computing PCA
+pca_u <- prcomp(trainu[,-7], center = TRUE, scale.=TRUE)
+pca_u
+```
+
+
+```{r}
+# Proportion pca
+prop.pca_u <- pca_u$sdev^2/sum(pca_u$sdev^2)
+prop.pca_u
+```
+
+```{r}
+# Proportion lda
+prop.lda <- umodel_lda$svd^2/sum(umodel_lda$svd^2)
+prop.lda
+```
+
+
+```{r}
+# Create Dataset
+dataset_p_l <- data.frame(category = trainu[,7],pca=pca_u$x,lda=pred$x)
+head(dataset_p_l)
+```
+
+```{r}
+library(gridExtra)
+up1 <- ggplot(dataset_p_l)+
+  geom_point(aes(lda.LD1, lda.LD2, colour = category, shape = category), size = 2.5) + 
+  labs(x = paste("LD1 (", round(prop.lda[1]*100,2), ")", sep=""),
+       y = paste("LD2 (", round(prop.lda[2]*100,2), ")", sep=""))
+
+up2 <- ggplot(dataset_p_l) + 
+  geom_point(aes(pca.PC1, pca.PC2, colour = category, shape = category), size = 2.5) +
+  labs(x = paste("PC1 (", round(prop.pca_u[1]*100,2), ")", sep=""),
+       y = paste("PC2 (", round(prop.pca_u[2]*100,2), ")", sep=""))
+
+grid.arrange(up1, up2)
+```
+
+```{r}
+names(predict(umodel_lda,trainu))
+```
+
+```{r}
+head(pred$posterior)
+```
+
+```{r}
+utrain_pred <- predict(umodel_lda,utrain)$class
+utest_pred <- predict(umodel_lda,utest)$class
+cal_err <- function(actual,predicted){
+  mean(actual != predicted)
+}
+```
+
+```{r}
+# Error on train data
+cal_err(predicted=utrain_pred, actual=utrain$category)
+```
+```{r}
+# Error on test data
+cal_err(predicted=utest_pred, actual=utest$category)
+```
+
+```{r}
+pred_tab_1 <-table(predicted = utest_pred, actual = utest$category)
+pred_tab_1
+u_lda_accuracy <- (pred_tab_1[1,1] +pred_tab_1[2, 2] + pred_tab_1[3,3] + pred_tab_1[4,4] +pred_tab_1[5,5]+pred_tab_1[6,6]+pred_tab_1[7,7]) / sum(pred_tab_1)
+u_lda_accuracy
+
+```
+We got 69.8 % accuracy with the lda model to find the category of university by giving these parameters (tlr,rpc,go,oi,perception)
+
+
+## PCA
+
+### Correlation 
+```{r}
+res_pca = cor(univdata_num)
+round(res_pca,2)
+res_pca
+corrplot(res_pca, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45)
+```
+
+Compute the sample covariance matrix S
+```{r}
+u_cov.matrix <-  cov(univdata_num)
+sum(diag(u_cov.matrix))
+u_cov.matrix 
+```
+
+```{r}
+# Computing Eigen Values and normalized eigen vectors
+u_eig_val <- eigen(u_cov.matrix)
+u_eig_val$values# EIGEN VALUES
+
+u_eig_val$vectors # EIGEN VECTORS
+names(univdata_num)
+```
+
+```{r}
+eigen(cor(univdata_num))$vectors
+comp_u <- prcomp(univdata_num,scale=TRUE,center=TRUE)
+comp_u
+summary(comp_u)
+biplot(comp_u, scale = 0)
+
+
+```
+
+```{r}
+var_explained_df <- data.frame(PC= paste0("PC",1:6),
+                               var_explained=(comp_u$sdev)^2/sum((comp_u$sdev)^2))
+ 
+head(var_explained_df)
+```
+
+```{r}
+var_explained_df %>%
+  ggplot(aes(x=PC,y=var_explained, group=1))+
+  geom_point(size=4)+
+  geom_line()+
+  labs(title="Scree plot: PCA on scaled data")
+```
+
+```{r}
+var_explained_df %>%
+  ggplot(aes(x=PC,y=var_explained))+
+  geom_col()+
+  labs(title="Scree plot: PCA on scaled data")
+```
+the first two components covers around 76% of data
+
+```{r}
+library("FactoMineR")
+comp_u.pca <- PCA(univdata_num, scale.unit = TRUE, ncp = 2, graph = TRUE)
+```
+
+```{r}
+library("factoextra")
+eig.val <- get_eigenvalue(comp_u.pca)
+eig.val
+```
+```{r}
+ind <- get_pca_ind(comp_u.pca)
+ind
+```
+```{r}
+
+# Coordinates of individuals
+head(ind$coord,10)
+# Quality of individuals
+head(ind$cos2,10)
+# Contributions of individuals
+head(ind$contrib,10)
+```
+
+```{r}
+fviz_pca_ind(comp_u.pca)
+```
+```{r}
+fviz_contrib(comp_u.pca,choice="var", axes = 1:2)
+fviz_contrib(comp_u.pca,choice="ind", axes = 1:2)
+
+```
+```{r}
+fviz_contrib(comp_u.pca,choice="ind", axes = 1)
+```
+
+```{r}
+
+univdata$PC1Scores <- comp_u$x[,1] #Adding the column to the main data frame
+final2 =univdata[order(univdata$PC1Scores),]#Arranging them in Descneding order
+head(final2)
+#final2[,"name", drop=FALSE]
+```
+The new Rankings based on the pca score
+
+
+
+
